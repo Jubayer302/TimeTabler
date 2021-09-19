@@ -34,106 +34,7 @@ class WindowManager(ScreenManager):
     '''A window manager to manage switching between sceens.'''
 
 class MainScreen(Screen):
-    # Sdd new room into database and show it in datatables
-    room_no = ObjectProperty()
-    room_capacity = ObjectProperty()
-    def room_checkbox_click(self, instance, value, type):
-        if value == True:
-            global room_type
-            room_type = type
-
-    def add_room(self):
-        conn = db.getConnection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT id, name, capacity, type FROM rooms')
-        result = cursor.fetchall()
-        conn.commit()
-        conn.close()
-        id = len(result) + 1
-        if not self.room_no.text:
-            return False
-        name = self.room_no.text
-        capacity = self.room_capacity.text
-        data = [id, name, capacity, room_type]
-        self.insertRoom(data)
-        self.ids.room_no.text = ''
-        self.ids.room_capacity.text = ''
-        self.room_display()
-
-    @staticmethod
-    def insertRoom(data):
-        conn = db.getConnection()
-        cursor = conn.cursor()
-        cursor.execute('INSERT INTO rooms (id, name, capacity, type) VALUES (?, ?, ?, ?)', data)
-        conn.commit()
-        conn.close()
-
-    def room_display(self):
-        conn = db.getConnection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT name, capacity, type FROM rooms')
-        result = cursor.fetchall()
-        conn.close()
-        for entry in result:
-            name = entry[0]
-            capacity = str(entry[1])
-            type = entry[2]
-            data = (name, capacity, type)
-            room_row_data.append(data)
-
-    # Sdd new teacher into database and show it in datatables
-    teacher_name = ObjectProperty()
-    teacher_dept = ObjectProperty()
-    teacher_title = ObjectProperty()
-
-    def add_teacher(self):
-        conn = db.getConnection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT id, name, dept, title FROM teachers')
-        result = cursor.fetchall()
-        conn.commit()
-        conn.close()
-        id = len(result)+1
-        if not self.teacher_name.text:
-            return False
-        name = self.teacher_name.text
-        dept = self.teacher_dept.text
-        title = self.teacher_title.text
-        data = [id, name, dept, title]
-        self.insertTeacher(data)
-        self.ids.teacher_name.text = ''
-        self.ids.teacher_dept.text = ''
-        self.ids.teacher_title.text = ''
-        self.room_display()
-
-    @staticmethod
-    def insertTeacher(data):
-        conn = db.getConnection()
-        cursor = conn.cursor()
-        cursor.execute('INSERT INTO teachers (id, name, dept, title) VALUES (?, ?, ?, ?)', data)
-        conn.commit()
-        conn.close()
-
-    def teacher_display(self):
-        conn = db.getConnection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT name, dept, title FROM teachers')
-        result = cursor.fetchall()
-        conn.close()
-        for entry in result:
-            name = entry[0]
-            dept = entry[1]
-            title = entry[2]
-            data = (name, dept, title)
-            teacher_row_data.append(data)
-
-    def delete(self, name):
-        conn = db.getConnection()
-        cursor = conn.cursor()
-        cursor.execute('DELETE FROM rooms WHERE name = ?', [name])
-        conn.commit()
-        conn.close()
-        MainScreen.room_display(self)
+    """wewewe"""
 
 class EditRoom(Screen):
     '''A screen that display the story fleets and all message histories.'''
@@ -160,8 +61,8 @@ class TimeTabler(MDApp):
         self.theme_cls.theme_style = "Light"
         self.theme_cls.primary_palette = "Teal"
         self.theme_cls.primary_hue = "400"
-        MainScreen.room_display(self)
-        MainScreen.teacher_display(self)
+        self.room_display()
+        self.teacher_display()
 
     def build(self):
         # Window size
@@ -299,22 +200,20 @@ class TimeTabler(MDApp):
         theme_dialog = MDThemePicker()
         theme_dialog.open()
 
-    alert_dialoge = None
     def show_alert_dialoge(self):
-        if not self.alert_dialoge:
-            self.alert_dialoge = MDDialog(
-                title="WARNING!",
-                text="Are You Sure You Want To Delete This File?.",
-                auto_dismiss=False,
-                buttons=[
-                    MDFlatButton(
-                        text="CANCEL", on_release=self.close_dialog
-                    ),
-                    MDRectangleFlatButton(
-                        text="DELETE", on_release=self.delete_dialog(value)
-                    ),
-                ],
-            )
+        self.alert_dialoge = MDDialog(
+            title="WARNING!",
+            text="Are You Sure You Want To Delete This File?.",
+            auto_dismiss=False,
+            buttons=[
+                MDFlatButton(
+                    text="CANCEL", on_release=self.close_dialog
+                ),
+                MDRectangleFlatButton(
+                    text="DELETE", on_release=self.delete_dialog(value)
+                ),
+            ],
+        )
         self.alert_dialoge.open()
 
     # Click Cancel Button
@@ -324,15 +223,117 @@ class TimeTabler(MDApp):
 
     # Click the Delete Button
     def delete_dialog(self, name):
-        MainScreen.delete(self, name)
-        # Close alert box
-        self.alert_dialoge.dismiss()
+        self.delete(name)
+
 
     def on_check_press(self, instance_table, current_row):
         global value
         value = str(current_row[0])
         print(value)
 
+    # Add new room into database and show it in datatables
+    room_no = ObjectProperty()
+    room_capacity = ObjectProperty()
+
+    def room_checkbox_click(self, instance, value, type):
+        if value == True:
+            global room_type
+            room_type = type
+
+    def add_room(self):
+        conn = db.getConnection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT id, name, capacity, type FROM rooms')
+        result = cursor.fetchall()
+        conn.commit()
+        conn.close()
+        id = len(result) + 1
+        if not self.wm.screens[0].ids['room_no'].text:
+            return False
+        name = self.wm.screens[0].ids['room_no'].text
+        capacity = self.wm.screens[0].ids['room_capacity'].text
+        data = [id, name, capacity, room_type]
+        self.insertRoom(data)
+        self.wm.screens[0].ids['room_no'].text = ''
+        self.wm.screens[0].ids['room_capacity'].text = ''
+        self.room_display()
+
+    @staticmethod
+    def insertRoom(data):
+        conn = db.getConnection()
+        cursor = conn.cursor()
+        cursor.execute('INSERT INTO rooms (id, name, capacity, type) VALUES (?, ?, ?, ?)', data)
+        conn.commit()
+        conn.close()
+
+    def room_display(self):
+        conn = db.getConnection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT name, capacity, type FROM rooms')
+        result = cursor.fetchall()
+        conn.close()
+        for entry in result:
+            name = entry[0]
+            capacity = str(entry[1])
+            type = entry[2]
+            data = (name, capacity, type)
+            room_row_data.append(data)
+        self.build()
+
+    # Sdd new teacher into database and show it in datatables
+    teacher_name = ObjectProperty()
+    teacher_dept = ObjectProperty()
+    teacher_title = ObjectProperty()
+
+    def add_teacher(self):
+        conn = db.getConnection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT id, name, dept, title FROM teachers')
+        result = cursor.fetchall()
+        conn.commit()
+        conn.close()
+        id = len(result) + 1
+        if not self.teacher_name.text:
+            return False
+        name = self.teacher_name.text
+        dept = self.teacher_dept.text
+        title = self.teacher_title.text
+        data = [id, name, dept, title]
+        self.insertTeacher(data)
+        self.teacher_name.text = ''
+        self.teacher_dept.text = ''
+        self.teacher_title.text = ''
+        self.room_display()
+
+    @staticmethod
+    def insertTeacher(data):
+        conn = db.getConnection()
+        cursor = conn.cursor()
+        cursor.execute('INSERT INTO teachers (id, name, dept, title) VALUES (?, ?, ?, ?)', data)
+        conn.commit()
+        conn.close()
+
+    def teacher_display(self):
+        conn = db.getConnection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT name, dept, title FROM teachers')
+        result = cursor.fetchall()
+        conn.close()
+        for entry in result:
+            name = entry[0]
+            dept = entry[1]
+            title = entry[2]
+            data = (name, dept, title)
+            teacher_row_data.append(data)
+        self.build()
+
+    def delete(self, name):
+        conn = db.getConnection()
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM rooms WHERE name = ?', [name])
+        conn.commit()
+        conn.close()
+        self.room_display()
 
 if __name__ == "__main__":
     TimeTabler().run()
